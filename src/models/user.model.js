@@ -12,6 +12,11 @@ const userSchema = new mongoose.Schema({
         trim: true,
         index:true,
     },
+    fullname: {
+        type: String,
+        required: true,
+        trim: true,
+    },
     email: {
         type: String,
         required: true,
@@ -85,3 +90,5 @@ userSchema.methods.generateRefreshToken= async function() {
 
 
 export const User = mongoose.model("User", userSchema);
+
+export default User;

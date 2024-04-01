@@ -6,3 +6,5 @@ class APiResponse{
         this.success = statuscode >= 200 && statuscode < 400
     }
 }
+
+export default APiResponse;
