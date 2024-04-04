@@ -1,7 +1,7 @@
 import asyncHandler  from '../utils/asyncHandler.js';
 import Apierror from '../utils/ApiErrors.js';
 import User from '../models/user.model.js';
-import {uploadToCloudinary} from '../utils/cloudinary.js';
+import {uploadToCloudinary, deleteToCloudinary} from '../utils/cloudinary.js';
 import APiResponse from '../utils/ApiResponse.js';
 import generateAccessAndRefreshToken from '../utils/generateTokens.js';
 import jwt from 'jsonwebtoken';
@@ -165,6 +165,11 @@ const updateAccount = asyncHandler(async (req, res) => {
 
 const updateAvatar = asyncHandler(async (req, res) => {
     const avatarfile = req.file?.path
+    const user_ = await User.findById(req.user._id)
+    await deleteToCloudinary(user_.avatar)
+    user_.avatar = ""
+    user_.save({validateBeforeSave: false})
+
     if (!avatarfile) {
         throw new Apierror('Please upload an image', 400)
     }
@@ -185,6 +190,15 @@ const updateAvatar = asyncHandler(async (req, res) => {
 })
 const updatecover= asyncHandler(async (req, res) => {
     const coverfile = req.file?.path
+
+    const user_ = await User.findById(req.user._id)
+    if (user_.coverimage){
+        await deleteToCloudinary(user_.coverimage)
+        user_.coverimage = ""
+        user_.save({validateBeforeSave: false})
+    }
+
+
     if (!coverfile) {
         throw new Apierror('Please upload an image', 400)
     }
