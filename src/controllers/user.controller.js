@@ -182,20 +182,22 @@ const updateAvatar = asyncHandler(async (req, res) => {
         throw new Apierror('Please upload an image', 400)
     }
     const avatar_new = await uploadToCloudinary(avatarfile)
-    if (!avatar_new.secure_url) {
+    if (!avatar_new.url) {
         throw new Apierror('Error uploading image', 401)
     }
     const user = await User.findByIdAndUpdate(req.user._id, {
         $set: {
-            avatar: avatar_new.secure_url
+            avatar: avatar_new.url
         }
     },
     {
         new: true,
-        runValidators: true
     }
     ).select('-password -refreshToken')
-})
+
+    return res.status(200).json(
+        new APiResponse(200, user, 'Avatar updated successfully')
+    )})
 const updatecover= asyncHandler(async (req, res) => {
     const coverfile = req.file?.path
 
