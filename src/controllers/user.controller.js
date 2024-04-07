@@ -78,37 +78,44 @@ const loginUser = asyncHandler(async (req, res) => {
     };
     return res
         .status(200)
-        .cookie('refresh', refreshToken, option)
-        .cookie('access', accessToken, option)
+        .cookie('refreshToken', refreshToken, option)
+        .cookie('accessToken', accessToken, option)
         .json(new APiResponse(200, { accessToken, refreshToken, user: loggedInUser }, 'User logged in successfully'));
 });
 
 
-const logoutUser = asyncHandler(async (req, res) => {
-    const user = await User.findByIdAndUpdate(
+const logoutUser = asyncHandler(async(req, res) => {
+    await User.findByIdAndUpdate(
         req.user._id,
-        {$set :{
-            refreshToken : ""
-        }}
+        {
+            $unset: {
+                refreshToken: 1 // this removes the field from document
+            }
+        },
+        {
+            new: true
+        }
     )
-    console.log(user)
-    option = {
+
+    const options = {
         httpOnly: true,
-        secure: true,
+        secure: true
     }
-    return res.status(200).clearCookie('refresh', option).clearCookie('access', option).json(
-        new APiResponse(200, {}, 'User logged out successfully')
-    )    
+
+    return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new APiResponse(200, {}, "User logged Out"))
 })
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-
-    const token = req.cookies?.refresh || req.headers['x-refresh-token'] || req.headers('authorization')?.replace('Bearer ', '');
+    const token = req.cookies?.refreshToken || req.headers['x-refresh-token'] || req.headers['authorization']?.replace('Bearer ', '');
     if (!token) {
         throw new Apierror('Please login to access this route', 401)
     }
     const decodetoken = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET)
-    const user = await User.findById(decodetoken._id)
+    const user = await User.findById(decodetoken.id)
     if (!user) {
         throw new Apierror('User not found', 404)
     }
@@ -120,9 +127,9 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         secure: true,
     }
 
-    const {Nrefresh, access} = await generateAccessAndRefreshToken(user,User)
-    return res.status(200).cookie('refresh', Nrefresh, options).cookie('access', access, options).json(
-        new APiResponse(200, {access, Nrefresh}, 'Token refreshed successfully')
+    const {refreshToken, accessToken} = await generateAccessAndRefreshToken(user,User)
+    return res.status(200).cookie('refreshToken', refreshToken, options).cookie('accessToken', accessToken, options).json(
+        new APiResponse(200, {accessToken, refreshToken}, 'Token refreshed successfully')
     )
 
 })
