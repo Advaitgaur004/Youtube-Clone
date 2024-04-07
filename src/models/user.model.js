@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
     },
     coverimage : {
         type: String,
-        required: true,
+        required: false,
         default: "https://www.gravatar.com/avatar/"
     },
     password: {
@@ -44,7 +44,9 @@ const userSchema = new mongoose.Schema({
             ref: "Video"
         }
     ],
-    
+    refreshToken: {
+        type: String
+    }
     },
     {
         timestamps: true,
@@ -64,7 +66,7 @@ userSchema.methods.isPasswordCorrect = async function(password) {
 
 
 userSchema.methods.generateAccessToken= async function() {
-    jwt.sign(
+    return jwt.sign(
         {
             id: this._id,
             email : this.email,
@@ -72,18 +74,19 @@ userSchema.methods.generateAccessToken= async function() {
         }, 
         process.env.ACCESS_TOKEN_SECRET, 
         {
-            expiresIn: ACCESS_TOKEN_EXPIRE
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRE
         }
     )
+    
 }
 userSchema.methods.generateRefreshToken= async function() {
-    jwt.sign(
+    return jwt.sign(
         {
             id: this._id,
         }, 
         process.env.REFRESH_TOKEN_SECRET, 
         {
-            expiresIn: REFRESH_TOKEN_EXPIRE
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRE
         }
     )
 }
