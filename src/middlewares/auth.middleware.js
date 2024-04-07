@@ -3,19 +3,30 @@ import Apierror from "../utils/ApiErrors.js";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
-export const verifyJWT = asyncHandler(async (req, res, next) => {
-    const token = req.cookies?.access || req.headers['x-access-token'] || req.headers['authorization']?.replace('Bearer ', '');
-    console.log(token)
-    if (!token) {
-        throw new Apierror('Please login to access this route', 401)
-    }
+export const verifyJWT = asyncHandler(async(req, _, next) => {
+    try {
+        console.log(req.cookies)
+        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "") 
+        console.log("token is ",token);
+        if (!token) {
+            throw new Apierror(401, "Unauthorized request")
+        }
 
-    const decodedjwt = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
-    const user = await User.findById(decodedjwt._id).select('-password -refreshToken')
+        const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
+    
+        const user = await User.findById(decodedToken?.id).select("-password -refreshToken")
+        console.log("user is ",user);
+        if (!user) {
+            
+            throw new Apierror(401, "Invalid Access Token")
+        }
+    
+        req.user = user;
+        next()
 
-    if (!user) {
-        throw new Apierror('Invalid Access Token', 401)
+    } catch (error) {
+        throw new Apierror(401, error?.message || "Invalid access token")
     }
-    req.user = user
-    next()
+    
 })
+  
