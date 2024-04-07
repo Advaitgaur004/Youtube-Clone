@@ -140,7 +140,7 @@ const changepassword = asyncHandler(async (req, res) => {
         throw new Apierror('User not found', 404)
     }
     const {oldpassword, newpassword} = req.body //From the client
-    const ispasswordcorrect = await User.isPasswordCorrect(oldpassword)
+    const ispasswordcorrect = await user.isPasswordCorrect(oldpassword)
     if (!ispasswordcorrect) {
         throw new Apierror('Invalid credentials', 401)
     }
