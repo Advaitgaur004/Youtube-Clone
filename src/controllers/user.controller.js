@@ -5,9 +5,11 @@ import {uploadToCloudinary, deleteToCloudinary} from '../utils/cloudinary.js';
 import APiResponse from '../utils/ApiResponse.js';
 import generateAccessAndRefreshToken from '../utils/generateTokens.js';
 import jwt from 'jsonwebtoken';
+import subscriptionSchema from '../models/subscription.model.js';
 
 const registerUser = asyncHandler(async (req, res) => {
     
+
     const {fullname,email,username,password} = req.body
     if (!fullname || !email || !username || !password) {
         throw new Apierror('Please fill all fields', 400)
@@ -54,8 +56,7 @@ const registerUser = asyncHandler(async (req, res) => {
    return res.status(201).json(
        new APiResponse(200, createdUser, 'User created successfully')
    )
-}
-);
+})
 
 const loginUser = asyncHandler(async (req, res) => {
     const { username, password } = req.body;
@@ -81,8 +82,7 @@ const loginUser = asyncHandler(async (req, res) => {
         .cookie('refreshToken', refreshToken, option)
         .cookie('accessToken', accessToken, option)
         .json(new APiResponse(200, { accessToken, refreshToken, user: loggedInUser }, 'User logged in successfully'));
-});
-
+})
 
 const logoutUser = asyncHandler(async(req, res) => {
     await User.findByIdAndUpdate(
@@ -232,4 +232,40 @@ const updatecover= asyncHandler(async (req, res) => {
     )
 })
 
+const getuserProfile = asyncHandler(async (req, res) => {
+    const {username} = req.params
+    if (!username) {
+        throw new Apierror('Please provide a username', 400)
+    }
+    const channel = await User.aggregate([
+        {
+            $match: { username },
+        },
+        {
+            $lookup: {
+                from: 'subscriptionSchema',
+                localField: '_id',
+                foreignField: 'channel',
+                as: 'subscribers',
+            },
+        },
+
+    {
+        $lookup : {
+            from : 'subscriptionSchema',
+            localField: '_id',
+            foreignField: 'subscriber',
+            as: 'channels',
+        }
+
+    },
+
+    {
+        $addFields : {
+            subscriberCount : { $size : '$subscribers'},
+            channelCount : { $size : '$channels'}
+        }
+    }
+])   
+})
 export  {registerUser,loginUser,logoutUser,refreshAccessToken,changepassword, updateAccount, updateAvatar,updatecover};
