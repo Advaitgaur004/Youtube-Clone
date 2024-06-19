@@ -92,8 +92,8 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contact
 For any questions or feedback, please contact:
-- **Email:** your-email@example.com
-- **GitHub:** [yourusername](https://github.com/yourusername)
+- **Email:** b22cs004@iitj.ac.in
+- **GitHub:** [Advaitgaur004](https://github.com/Advaitgaur004)
 
 ---
 
